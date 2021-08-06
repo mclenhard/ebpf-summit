@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: bcc-example-tool
+  labels:
+    app: bcc-example-tool
+spec:
+  selector:
+    matchLabels:
+      name: bcc-example-tool
+  template:
+    metadata:
+      labels:
+        name: bcc-example-tool
+    spec:
+      containers:
+        - name: bcc-example-tool
+          image: containiq/bcc-example-tool
+          #command: ["python3", "./tcpconnect-bpfcc"] edit this to run a different tool
+          resources:
+            requests:
+              ephemeral-storage: "2Gi"
+          env:
+            - name: PYTHONUNBUFFERED
+              value: "1"
+          securityContext:
+            privileged: true
+            capabilities:
+              add:
+                - SYS_ADMIN
+          volumeMounts:
+            - name: lsb-release
+              mountPath: /etc/lsb-release.host
+              readOnly: false
+            - name: os-release
+              mountPath: /etc/os-release.host
+              readOnly: false
+            - name: modules-dir
+              mountPath: /lib/modules
+              readOnly: false
+            - name: modules-host
+              mountPath: /lib/modules.host
+              readOnly: false
+            - name: linux-headers-generated
+              mountPath: /usr/src/
+              readOnly: false
+            - name: boot-host
+              mountPath: /boot.host
+              readOnly: false
+            - name: debug
+              mountPath: /sys/kernel/debug
+              readOnly: false
+      hostNetwork: true
+      hostPID: true
+      initContainers:
+        - name: init-headers
+          image: containiq/bcc-linux-headers
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["SYS_ADMIN"]
+          volumeMounts:
+            - name: lsb-release
+              mountPath: /etc/lsb-release.host
+              readOnly: false
+            - name: os-release
+              mountPath: /etc/os-release.host
+              readOnly: false
+            - name: modules-dir
+              mountPath: /lib/modules
+              readOnly: false
+            - name: modules-host
+              mountPath: /lib/modules.host
+              readOnly: false
+            - name: linux-headers-generated
+              mountPath: /usr/src/
+              readOnly: false
+            - name: boot-host
+              mountPath: /boot.host
+              readOnly: false
+      volumes:
+        - name: lsb-release
+          hostPath:
+            path: /etc/lsb-release
+        - name: os-release
+          hostPath:
+            path: /etc/os-release
+        - name: modules-dir
+          hostPath:
+            path: /var/cache/linux-headers/modules_dir
+        - name: linux-headers-generated
+          hostPath:
+            path: /var/cache/linux-headers/generated
+        - name: boot-host
+          hostPath:
+            path: /
+        - name: modules-host
+          hostPath:
+            path: /lib/modules
+        - name: debug
+          hostPath:
+            path: /sys/kernel/debug
