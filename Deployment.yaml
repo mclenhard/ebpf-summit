@@ -93,7 +93,7 @@ spec:
             path: /var/cache/linux-headers/generated
         - name: boot-host
           hostPath:
-            path: /
+            path: /boot
         - name: modules-host
           hostPath:
             path: /lib/modules
